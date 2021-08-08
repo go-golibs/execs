@@ -1,0 +1,7 @@
+git.corout.in/golibs/buffer v1.0.1 h1:26Bi0oB4OdFjhmKBsjqcO0EmkCN2aAJMaQURc/u46m4=
+git.corout.in/golibs/buffer v1.0.1/go.mod h1:GmQRF8rG1MEtz6LkX4qkOKr/YoGTx0JIqjUu0bFHM5Q=
+git.corout.in/golibs/errors v1.0.1/go.mod h1:8BNBFkzaAjNmfBARMaf9WoSpemm4s9CzZhPV4fb7CsY=
+git.corout.in/golibs/errors v1.0.3 h1:XY0yXzR33ZMx4v49dRS35AItV5rllaXV6YyP8rVKCnM=
+git.corout.in/golibs/errors v1.0.3/go.mod h1:8BNBFkzaAjNmfBARMaf9WoSpemm4s9CzZhPV4fb7CsY=
+git.corout.in/golibs/fields v0.0.0-20210806231757-1734703190fd h1:Th4c9Jf40LQOv7/2pUnLgBu70OBmd8nzZp2Up9HzO5g=
+git.corout.in/golibs/fields v0.0.0-20210806231757-1734703190fd/go.mod h1:Tw1H3CHtkNk3rgfUQUi96L8CrJmyibnazB9Q2csXRno=
