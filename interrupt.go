@@ -10,7 +10,7 @@ import (
 
 // InterruptHandler - запускает обработчик сигналов прерывания программы
 // и возвращает контекст с синхронизацией завершения работы
-func InterruptHandler(ctx context.Context, eh ...func()) context.Context {
+func InterruptHandler(ctx context.Context, handles ...func()) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -25,16 +25,16 @@ func InterruptHandler(ctx context.Context, eh ...func()) context.Context {
 	go func() {
 		<-sig
 
-		_, _ = fmt.Fprintln(os.Stdout, "\r- Ctrl+C pressed in Terminal")
+		fmt.Println( "\r- Ctrl+C pressed in Terminal")
 
-		if len(eh) == 0 {
+		if len(handles) == 0 {
 			cancel()
 
 			return
 		}
 
-		for _, apply := range eh {
-			apply()
+		for _, handle := range handles {
+			handle()
 		}
 	}()
 

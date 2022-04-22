@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"git.corout.in/golibs/buffer"
+	"git.corout.in/golibs/iorw"
 )
 
 // Command - инерфейс команды системной командной оболочки
@@ -24,9 +24,9 @@ type WorkingDirer interface {
 	WorkingDir() string
 }
 
-// BufferProvider - буферезируемый объект
+// BufferProvider - буферизируемый объект
 type BufferProvider interface {
-	Buffer() *buffer.Buffer
+	Buffer() *iorw.Buffer
 }
 
 // Exiter - завершаемый объект
@@ -34,12 +34,7 @@ type Exiter interface {
 	ExitCode() int
 }
 
-// Runner - запускатор всякого
-type Runner interface {
-	Run(signals <-chan os.Signal, ready chan<- struct{}) error
-}
-
-// NewCommand - конструтор команды оболочки
+// NewCommand - конструктор команды оболочки
 // nolint
 func NewCommand(path string, command Command) *exec.Cmd {
 	cmd := exec.Command(filepath.Clean(path), command.Args()...)

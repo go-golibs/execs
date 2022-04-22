@@ -7,9 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"git.corout.in/golibs/buffer"
 	"git.corout.in/golibs/errors"
-	"git.corout.in/golibs/fields"
+	"git.corout.in/golibs/iorw"
 )
 
 const (
@@ -23,8 +22,8 @@ const (
 // Session - враппер для запуска и управления процессом командной оболочки
 type Session struct {
 	cmd      *exec.Cmd
-	bout     *buffer.Buffer
-	berr     *buffer.Buffer
+	bout     *iorw.Buffer
+	berr     *iorw.Buffer
 	exited   <-chan struct{}
 	lock     *sync.Mutex
 	errors   chan error
@@ -32,7 +31,7 @@ type Session struct {
 }
 
 // Buffer - возвращает буфер вывода процесса сессии
-func (s *Session) Buffer() *buffer.Buffer {
+func (s *Session) Buffer() *iorw.Buffer {
 	return s.bout
 }
 
@@ -69,9 +68,9 @@ func (s *Session) Terminate() *Session {
 func (s *Session) Signal(signal os.Signal) *Session {
 	if s.processIsAlive() {
 		if err := s.cmd.Process.Signal(signal); err != nil {
-			s.errors <- errors.Builder(
-				fields.Stringer("signal", signal),
-			).Wrap(err, "send signal to proc")
+			s.errors <- errors.Ctx().
+				Stringer("signal", signal).
+				Wrap(err, "send signal to proc")
 		}
 	}
 
@@ -110,7 +109,7 @@ func (s *Session) Wait(timeout ...interface{}) *Session {
 func (s *Session) monitorForExit(exited chan<- struct{}) {
 	err := s.cmd.Wait()
 	if err != nil {
-		s.errors <- errors.Wrap(err, "close output buffer")
+		s.errors <- errors.Wrap(err, "command return")
 	}
 
 	s.lock.Lock()

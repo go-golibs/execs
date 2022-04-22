@@ -1,13 +1,13 @@
 package execs
 
 import (
+	"bytes"
 	"io"
 	"os/exec"
-	"strings"
 	"sync"
 
-	"git.corout.in/golibs/buffer"
 	"git.corout.in/golibs/errors"
+	"git.corout.in/golibs/iorw"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 // Result - возвращает результат выполнения команды оболочки из stdout
 // ctx обязан содержать zap.Logger
 func Result(name string, command Command, writers ...io.Writer) (string, error) {
-	sess, err := Start(NewCommand(name, command))
+	sess, err := StartCmd(NewCommand(name, command), writers...)
 	if err != nil {
 		return "", errors.Wrap(err, "run command session")
 	}
@@ -29,12 +29,12 @@ func Result(name string, command Command, writers ...io.Writer) (string, error) 
 		err = errors.And(err, e)
 	}
 
-	return strings.Trim(string(sess.Buffer().Contents()), "\n"), err
+	return string(bytes.Trim(sess.Buffer().Contents(), "\n")), err
 }
 
-// Run - запускает команду оболочки
+// Run - запускает команду оболочки с ожиданием выполнения
 func Run(name string, command Command, writers ...io.Writer) error {
-	sess, err := Start(NewCommand(name, command), writers...)
+	sess, err := StartCmd(NewCommand(name, command), writers...)
 	if err != nil {
 		return errors.Wrap(err, "run command session")
 	}
@@ -44,15 +44,15 @@ func Run(name string, command Command, writers ...io.Writer) error {
 	return nil
 }
 
-// Start - запускает команду оболочки завернутую в управляющий враппер
-func Start(cmd *exec.Cmd, writers ...io.Writer) (*Session, error) {
+// StartCmd - запускает команду оболочки завернутую в управляющую обертку
+func StartCmd(cmd *exec.Cmd, writers ...io.Writer) (*Session, error) {
 	exited := make(chan struct{})
 
 	session := &Session{
 		cmd:      cmd,
-		bout:     buffer.NewBuffer(),
-		berr:     buffer.NewBuffer(),
-		errors:   make(chan error),
+		bout:     iorw.NewBuffer(),
+		berr:     iorw.NewBuffer(),
+		errors:   make(chan error, 1024),
 		exited:   exited,
 		lock:     &sync.Mutex{},
 		exitCode: -1,
