@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	git.corout.in/golibs/errors v1.1.17
-	git.corout.in/golibs/iorw v1.0.4
+	git.corout.in/golibs/iorw v1.0.5
 )
 
 require (
