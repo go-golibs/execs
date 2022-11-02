@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"git.corout.in/golibs/iorw"
+	"git.eth4.dev/golibs/iorw"
 )
 
 // Command - инерфейс команды системной командной оболочки

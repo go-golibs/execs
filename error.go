@@ -1,7 +1,7 @@
 package execs
 
 import (
-	"git.corout.in/golibs/errors"
+	"git.eth4.dev/golibs/errors"
 )
 
 // ExitEvent - событие завершения процесса раннера

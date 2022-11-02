@@ -7,8 +7,8 @@ import (
 	"syscall"
 	"time"
 
-	"git.corout.in/golibs/errors"
-	"git.corout.in/golibs/iorw"
+	"git.eth4.dev/golibs/errors"
+	"git.eth4.dev/golibs/iorw"
 )
 
 const (
@@ -78,7 +78,7 @@ func (s *Session) Signal(signal os.Signal) *Session {
 }
 
 // Wait - ожидает завершения процесса
-func (s *Session) Wait(timeout ...interface{}) *Session {
+func (s *Session) Wait(timeout ...any) *Session {
 	// если указан таймаут, обрабатываем
 	if len(timeout) >= 1 {
 		if t, ok := timeout[0].(time.Duration); ok {
