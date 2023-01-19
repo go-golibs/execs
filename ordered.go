@@ -23,7 +23,7 @@ func NewOrdered(members ...Member) Runner {
 
 // Run - колбэк запуска раннера
 func (g *orderedGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	errTrace := make(ErrorTrace, 0, len(g.members))
+	exitTrace := make(ExitTrace, 0, len(g.members))
 
 	for m := 0; m < len(g.members); m++ {
 		member := g.members[m]
@@ -36,10 +36,16 @@ func (g *orderedGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) erro
 			case <-p.Ready():
 				break Next
 			case err := <-p.Wait():
-				errTrace = append(errTrace, ExitEvent{
-					Member: member,
-					Err:    errors.Ctx().Str("member", member.Name).Just(err),
-				})
+				exit := ExitEvent{Member: member}
+
+				if err != nil {
+					exit.Err = errors.Ctx().
+						Str("runner", member.Name).
+						Wrap(err, "exit runner status")
+				}
+
+				exitTrace = append(exitTrace, exit)
+
 				break Next
 			}
 		}
@@ -47,20 +53,21 @@ func (g *orderedGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) erro
 
 	close(ready)
 
-	return g.wait(signals, errTrace)
+	return g.wait(signals, exitTrace)
 }
 
-func (g *orderedGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) error {
-	errOccurred := false
+func (g *orderedGroup) wait(signals <-chan os.Signal, exitTrace ExitTrace) error {
+	var exitErr error
+
 	exited := map[string]struct{}{}
 	signal := <-signals
 
-	if len(errTrace) > 0 {
-		for _, exitEvent := range errTrace {
+	if len(exitTrace) > 0 {
+		for _, exitEvent := range exitTrace {
 			exited[exitEvent.Member.Name] = struct{}{}
 
 			if exitEvent.Err != nil {
-				errOccurred = true
+				errors.And(exitErr, exitEvent.Err)
 			}
 		}
 	}
@@ -78,12 +85,14 @@ func (g *orderedGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) error
 				select {
 				case err := <-p.Wait():
 					if err != nil {
-						errTrace = append(errTrace, ExitEvent{
-							Member: member,
-							Err:    errors.Ctx().Str("member", member.Name).Just(err),
-						})
-						errOccurred = true
+						exitErr = errors.And(
+							exitErr,
+							errors.Ctx().
+								Str("runner", member.Name).
+								Wrap(err, "exit runner status"),
+						)
 					}
+
 					break Exited
 				case <-time.After(time.Millisecond * 100):
 				}
@@ -91,9 +100,5 @@ func (g *orderedGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) error
 		}
 	}
 
-	if errOccurred {
-		return errTrace
-	}
-
-	return nil
+	return exitErr
 }

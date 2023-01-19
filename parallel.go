@@ -22,9 +22,9 @@ func NewParallel(members ...Member) Runner {
 	}
 }
 
-// Run колбэк запуска раннера группы
+// Run коллбэк запуска раннера группы
 func (g parallelGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	errTrace := make(ErrorTrace, 0, len(g.members))
+	exitTrace := make(ExitTrace, 0, len(g.members))
 
 	var (
 		wg     sync.WaitGroup
@@ -45,10 +45,16 @@ func (g parallelGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) erro
 				case <-p.Ready():
 					break Done
 				case err := <-p.Wait():
-					traces <- ExitEvent{
-						Member: member,
-						Err:    errors.Ctx().Str("member", member.Name).Just(err),
+					exit := ExitEvent{Member: member}
+
+					if err != nil {
+						exit.Err = errors.Ctx().
+							Str("runner", member.Name).
+							Wrap(err, "exit runner status")
 					}
+
+					traces <- exit
+
 					break Done
 				}
 			}
@@ -61,23 +67,24 @@ func (g parallelGroup) Run(signals <-chan os.Signal, ready chan<- struct{}) erro
 	close(ready)
 
 	for event := range traces {
-		errTrace = append(errTrace, event)
+		exitTrace = append(exitTrace, event)
 	}
 
-	return g.wait(signals, errTrace)
+	return g.wait(signals, exitTrace)
 }
 
-func (g *parallelGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) error {
-	errOccurred := false
+func (g *parallelGroup) wait(signals <-chan os.Signal, exitTrace ExitTrace) error {
+	var exitErr error
+
 	exited := map[string]struct{}{}
 	signal := <-signals
 
-	if len(errTrace) > 0 {
-		for _, exitEvent := range errTrace {
+	if len(exitTrace) > 0 {
+		for _, exitEvent := range exitTrace {
 			exited[exitEvent.Member.Name] = struct{}{}
 
 			if exitEvent.Err != nil {
-				errOccurred = true
+				exitErr = errors.And(exitErr, exitEvent.Err)
 			}
 		}
 	}
@@ -95,11 +102,12 @@ func (g *parallelGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) erro
 				select {
 				case err := <-p.Wait():
 					if err != nil {
-						errTrace = append(errTrace, ExitEvent{
-							Member: member,
-							Err:    errors.Ctx().Str("member", member.Name).Just(err),
-						})
-						errOccurred = true
+						exitErr = errors.And(
+							exitErr,
+							errors.Ctx().
+								Str("runner", member.Name).
+								Wrap(err, "exit runner status"),
+						)
 					}
 					break Exited
 				case <-time.After(time.Millisecond * 100):
@@ -108,9 +116,5 @@ func (g *parallelGroup) wait(signals <-chan os.Signal, errTrace ErrorTrace) erro
 		}
 	}
 
-	if errOccurred {
-		return errTrace
-	}
-
-	return nil
+	return exitErr
 }
