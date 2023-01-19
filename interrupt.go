@@ -24,18 +24,13 @@ func InterruptHandler(ctx context.Context, handles ...func()) context.Context {
 
 	go func() {
 		<-sig
-
-		fmt.Println( "\r- Ctrl+C pressed in Terminal")
-
-		if len(handles) == 0 {
-			cancel()
-
-			return
-		}
+		fmt.Println("\r- Ctrl+C pressed in Terminal")
 
 		for _, handle := range handles {
 			handle()
 		}
+
+		cancel()
 	}()
 
 	return ctx
