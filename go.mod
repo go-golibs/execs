@@ -3,13 +3,13 @@ module gopkg.in/gomisc/execs.v1
 go 1.18
 
 require (
-	git.eth4.dev/golibs/errors v1.2.2
-	git.eth4.dev/golibs/iorw v1.1.0
+	gopkg.in/gomisc/errors.v1 v1.3.2
+	gopkg.in/gomisc/iorw.v1 v1.2.0
 )
 
 require (
-	git.eth4.dev/golibs/fields v1.1.0 // indirect
-	git.eth4.dev/golibs/filepaths v1.1.0 // indirect
-	git.eth4.dev/golibs/slog v1.1.1 // indirect
+	gopkg.in/gomisc/fields.v1 v1.1.2 // indirect
+	gopkg.in/gomisc/filepaths.v1 v1.2.1 // indirect
+	gopkg.in/gomisc/slog.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

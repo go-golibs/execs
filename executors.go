@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"sync"
 
-	"git.eth4.dev/golibs/errors"
-	"git.eth4.dev/golibs/iorw"
+	"gopkg.in/gomisc/errors.v1"
+	"gopkg.in/gomisc/iorw.v1"
 )
 
 const (

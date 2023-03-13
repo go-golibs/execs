@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"git.eth4.dev/golibs/errors"
+	"gopkg.in/gomisc/errors.v1"
 )
 
 type parallelGroup struct {
