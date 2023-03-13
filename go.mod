@@ -1,4 +1,4 @@
-module git.eth4.dev/golibs/execs
+module gopkg.in/gomisc/execs.v1
 
 go 1.18
 
